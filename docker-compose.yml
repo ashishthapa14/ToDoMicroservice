@@ -1,0 +1,45 @@
+services:
+  frontend:
+    build: ./todo-react-app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - todos_microservice
+      - statistics_microservice
+
+  todos_microservice:
+    build: ./ToDoMicroservices
+    ports:
+      - "8383:8383"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/mydb
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+    depends_on:
+      - mysql
+
+  statistics_microservice:
+    build: ./StatisticsMicroservice
+    ports:
+      - "8484:8484"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/statdb
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+    depends_on:
+      - mysql
+      - todos_microservice
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  mysql_data:
